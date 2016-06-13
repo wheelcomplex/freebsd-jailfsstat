@@ -39,6 +39,7 @@ static const char rcsid[] =
 #include <sys/sysent.h>
 #include <sys/vnode.h>
 #include <sys/namei.h>
+#include <sys/fcntl.h>
 
 static sy_call_t	*old_getfsstat,
 			*old_statfs,
@@ -83,7 +84,7 @@ getchrootdir(struct proc *p, char *out, size_t size)
 	slash_prefixed = 0;
 
 	for (; vp != rootvnode;) {
-		if (vp->v_flag & VROOT) {
+		if (vp->v_vflag & VV_ROOT) {
 			if (vp->v_mount == NULL) {	/* forced unmount */
 				free(buf, M_TEMP);
 				return (EBADF);
@@ -91,7 +92,7 @@ getchrootdir(struct proc *p, char *out, size_t size)
 			vp = vp->v_mount->mnt_vnodecovered;
 			continue;
 		}
-		if (vp->v_dd->v_id != vp->v_ddid) {
+		if (vp->v_cache_dd->nc_vp != vp->v_cache_dd->nc_dvp) {
 			free(buf, M_TEMP);
 			return (ENOTDIR);
 		}
@@ -100,7 +101,7 @@ getchrootdir(struct proc *p, char *out, size_t size)
 			free(buf, M_TEMP);
 			return (ENOENT);
 		}
-		if (ncp->nc_dvp != vp->v_dd) {
+		if (ncp->nc_dvp != vp->v_cache_dd->nc_vp) {
 			free(buf, M_TEMP);
 			return (EBADF);
 		}
@@ -117,7 +118,7 @@ getchrootdir(struct proc *p, char *out, size_t size)
 		}
 		*--bp = '/';
 		slash_prefixed = 1;
-		vp = vp->v_dd;
+		vp = vp->v_cache_dd->nc_dvp;
 	}
 	if (!slash_prefixed) {
 		if (bp == buf) {
