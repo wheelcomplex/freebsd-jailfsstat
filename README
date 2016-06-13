@@ -1,0 +1,48 @@
+/*
+ * jailfsstat README
+ *
+ * (c) 2002 Pawel Jakub Dawidek <nick@garage.freebsd.pl>
+ *
+ * $Id: README,v 1.6 2002/10/02 07:16:50 jules Exp $
+ *
+ */
+
+Jailfsstat is a kernel module for FreeBSD 4.x.
+Thanks to this module process in jail can see only file systems mounted
+inside of them.
+
+Simple example:
+
+	# mount
+	/dev/ad0s3a on / (ufs, local)
+	/dev/ad0s3c on /usr (ufs, local)
+	/dev/ad0s3d on /tmp (ufs, local)
+	/dev/ad0s3e on /jail/bin (ufs, local)
+	/dev/ad0s3f on /jail/usr (ufs, local)
+	/dev/ad1s1a on /jail (ufs, local)
+	procfs on /proc (procfs, local)
+
+	# jail /jail tmp 0 /bin/tcsh
+	# mount
+	/dev/ad0s3e on /bin (ufs, local)
+	/dev/ad0s3f on /usr (ufs, local)
+	/dev/ad1s1a on / (ufs, local)
+
+Path to file systems was also cuted.
+
+How to install?
+
+	# tar -zvxf jailfsstat.tgz
+	# cd jailfsstat
+	# make ; make install ; make load
+
+TODO:
++ For now only getfsstat() is catched, we should catch
+  statfs() and fstatfs() as well. [DONE!]
++ In getfsstat() we should take statfs from chroot dir and
+  return it with path "/". [DONE!]
++ When calling fstatfs(2) with descryptor from outside of jail
+  f_mntonname should be set to "/". [DONE!]
+
+-- 
+Pawel Jakub Dawidek <nick@garage.freebsd.pl>
